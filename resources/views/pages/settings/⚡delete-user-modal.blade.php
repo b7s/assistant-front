@@ -1,25 +1,23 @@
 <?php
 
-use App\Concerns\PasswordValidationRules;
-use App\Livewire\Actions\Logout;
+use App\Service\ApiClient;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Session;
 use Livewire\Component;
 
 new class extends Component {
-    use PasswordValidationRules;
-
     public string $password = '';
 
-    /**
-     * Delete the currently authenticated user.
-     */
-    public function deleteUser(Logout $logout): void
+    public function deleteUser(ApiClient $api): void
     {
         $this->validate([
-            'password' => $this->currentPasswordRules(),
+            'password' => 'required|string',
         ]);
 
-        tap(Auth::user(), $logout(...))->delete();
+        $api->logout();
+        Auth::logout();
+        Session::invalidate();
+        Session::regenerateToken();
 
         $this->redirect('/', navigate: true);
     }

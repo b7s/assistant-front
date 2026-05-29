@@ -1,48 +1,70 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Database\Factories\UserFactory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Attributes\Hidden;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Str;
-use Laravel\Fortify\Contracts\PasskeyUser;
-use Laravel\Fortify\PasskeyAuthenticatable;
-use Laravel\Fortify\TwoFactorAuthenticatable;
+use Illuminate\Contracts\Auth\Authenticatable;
 
-#[Fillable(['name', 'email', 'password'])]
-#[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
-class User extends Authenticatable implements PasskeyUser
+class User implements Authenticatable
 {
-    /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
+    public function __construct(
+        public string $id,
+        public string $name,
+        public string $email,
+        public string $currency = 'USD',
+        public string $timezone = 'UTC',
+    ) {}
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
+    public static function fromApi(array $data): self
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        return new self(
+            id: $data['id'],
+            name: $data['name'],
+            email: $data['email'],
+            currency: $data['currency'] ?? 'USD',
+            timezone: $data['timezone'] ?? 'UTC',
+        );
     }
 
-    /**
-     * Get the user's initials
-     */
+    public function getAuthIdentifierName(): string
+    {
+        return 'id';
+    }
+
+    public function getAuthIdentifier(): string
+    {
+        return $this->id;
+    }
+
+    public function getAuthPassword(): string
+    {
+        return '';
+    }
+
+    public function getAuthPasswordName(): string
+    {
+        return '';
+    }
+
+    public function getRememberToken(): ?string
+    {
+        return null;
+    }
+
+    public function setRememberToken($value): void {}
+
+    public function getRememberTokenName(): string
+    {
+        return '';
+    }
+
     public function initials(): string
     {
-        return Str::of($this->name)
+        return str($this->name)
             ->explode(' ')
             ->take(2)
-            ->map(fn ($word) => Str::substr($word, 0, 1))
+            ->map(static fn ($word) => str($word)->substr(0, 1))
             ->implode('');
     }
 }
