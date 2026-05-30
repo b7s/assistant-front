@@ -6,7 +6,7 @@ use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-new #[Title('Security settings')] class extends Component {
+new #[Title('settings.security_settings')] class extends Component {
     public string $current_password = '';
 
     public string $password = '';
@@ -26,20 +26,20 @@ new #[Title('Security settings')] class extends Component {
             throw $e;
         }
 
-        Flux::toast(text: __('Password updated.'), variant: 'success');
+        Flux::toast(text: __('app.messages.password_updated'), variant: 'success');
     }
 }; ?>
 
 <section class="w-full">
     @include('partials.settings-heading')
 
-    <flux:heading class="sr-only">{{ __('Security settings') }}</flux:heading>
+    <flux:heading class="sr-only">{{ __('app.settings.security_settings') }}</flux:heading>
 
-    <x-pages::settings.layout :heading="__('Update password')" :subheading="__('Ensure your account is using a long, random password to stay secure')">
+    <x-pages::settings.layout :heading="__('app.settings.update_password')" :subheading="__('app.settings.ensure_your_account_is_using_a_long_random_password_to_stay_secure')">
         <form method="POST" wire:submit="updatePassword" class="mt-6 space-y-6">
             <flux:input
                 wire:model="current_password"
-                :label="__('Current password')"
+                :label="__('app.auth_fields.current_password')"
                 type="password"
                 required
                 autocomplete="current-password"
@@ -47,7 +47,7 @@ new #[Title('Security settings')] class extends Component {
             />
             <flux:input
                 wire:model="password"
-                :label="__('New password')"
+                :label="__('app.auth_fields.new_password')"
                 type="password"
                 required
                 autocomplete="new-password"
@@ -55,7 +55,7 @@ new #[Title('Security settings')] class extends Component {
             />
             <flux:input
                 wire:model="password_confirmation"
-                :label="__('Confirm password')"
+                :label="__('app.auth_fields.confirm_password')"
                 type="password"
                 required
                 autocomplete="new-password"
@@ -64,7 +64,7 @@ new #[Title('Security settings')] class extends Component {
 
             <div class="flex items-center gap-4">
                 <flux:button variant="primary" type="submit" data-test="update-password-button">
-                    {{ __('Save') }}
+                    {{ __('app.actions.save') }}
                 </flux:button>
             </div>
         </form>
