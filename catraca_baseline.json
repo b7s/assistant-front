@@ -9,7 +9,25 @@
         ]
     },
     "security": {
-        "advisories": null
+        "advisories": null,
+        "rules": {
+            "hardcoded_secrets": true,
+            "sql_injection": true,
+            "command_injection": true,
+            "csrf_protection": true,
+            "path_traversal": true,
+            "insecure_deserialization": true,
+            "ssrf": true,
+            "tls_verification": true,
+            "insecure_rng": true,
+            "gitignore_sensitive": true,
+            "package_freshness": true,
+            "weak_cryptography": true,
+            "cors_config": true,
+            "npm_audit": true
+        },
+        "fixers": [],
+        "released_days": 3
     },
     "style": {
         "violations": 0
@@ -21,7 +39,7 @@
         "percentage": 85
     },
     "duplication": {
-        "percentage": 2,
+        "percentage": 0,
         "clones": [],
         "min_lines": 3,
         "min_tokens": 30
@@ -55,5 +73,8 @@
     "complexity": {
         "max_ccn": 0
     },
-    "updated_at": "2026-05-30T01:42:06+00:00"
+    "updated_at": "2026-06-03T00:05:59+00:00",
+    "parallel": {
+        "enabled": true
+    }
 }

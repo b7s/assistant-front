@@ -19,13 +19,14 @@ readonly class ApiClient
         private string $clientId,
         private string $clientSecret,
         private int $timeout,
+        private string $apiPrefixVersion,
     ) {}
 
     public function connect(): string
     {
         return Cache::remember('api_connection_token', now()->addHours(23), function (): string {
             $response = $this->baseRequest()
-                ->post('/api/token/connect', [
+                ->post($this->apiPath('/token/connect'), [
                     'client_id' => $this->clientId,
                     'client_secret' => $this->clientSecret,
                 ]);
@@ -46,7 +47,7 @@ readonly class ApiClient
     public function login(string $email, string $password): User
     {
         $response = $this->connectedRequest()
-            ->post('/api/login', compact('email', 'password'));
+            ->post($this->apiPath('/login'), compact('email', 'password'));
 
         if ($response->failed()) {
             throw new RuntimeException($response->json('message', 'Invalid credentials.'));
@@ -64,7 +65,7 @@ readonly class ApiClient
     public function register(string $name, string $email, string $password, string $passwordConfirmation): User
     {
         $response = $this->connectedRequest()
-            ->post('/api/register', [
+            ->post($this->apiPath('/register'), [
                 'name' => $name,
                 'email' => $email,
                 'password' => $password,
@@ -84,7 +85,7 @@ readonly class ApiClient
     public function logout(): void
     {
         try {
-            $this->authenticatedRequest()->post('/api/logout');
+            $this->authenticatedRequest()->post($this->apiPath('/logout'));
         } finally {
             Session::forget(['auth_user', 'api_token']);
         }
@@ -126,6 +127,11 @@ readonly class ApiClient
     {
         return $this->connectedRequest()
             ->withToken(Session::get('api_token'));
+    }
+
+    private function apiPath(string $path): string
+    {
+        return sprintf('/api/%s%s', $this->apiPrefixVersion, $path);
     }
 
     private function storeSession(User $user, string $token): void

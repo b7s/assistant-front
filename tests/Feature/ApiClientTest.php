@@ -12,6 +12,7 @@ beforeEach(function () {
         clientId: 'web-app',
         clientSecret: 'secret-web-b7s-2024',
         timeout: 30,
+        apiPrefixVersion: 'v1',
     );
 
     Cache::flush();
@@ -20,7 +21,7 @@ beforeEach(function () {
 
 test('connect returns connection token from api', function () {
     Http::fake([
-        'api.test.com/api/token/connect' => Http::response(['token' => 'jwt-connection-token'], 200),
+        'api.test.com/api/v1/token/connect' => Http::response(['token' => 'jwt-connection-token'], 200),
     ]);
 
     $token = $this->apiClient->connect();
@@ -28,7 +29,7 @@ test('connect returns connection token from api', function () {
     expect($token)->toBe('jwt-connection-token');
 
     Http::assertSent(function ($request) {
-        return $request->url() === 'https://api.test.com/api/token/connect'
+        return $request->url() === 'https://api.test.com/api/v1/token/connect'
             && $request['client_id'] === 'web-app'
             && $request['client_secret'] === 'secret-web-b7s-2024';
     });
@@ -36,7 +37,7 @@ test('connect returns connection token from api', function () {
 
 test('connect caches token for 23 hours', function () {
     Http::fake([
-        'api.test.com/api/token/connect' => Http::response(['token' => 'cached-token'], 200),
+        'api.test.com/api/v1/token/connect' => Http::response(['token' => 'cached-token'], 200),
     ]);
 
     $this->apiClient->connect();
@@ -47,7 +48,7 @@ test('connect caches token for 23 hours', function () {
 
 test('connect throws exception on failure', function () {
     Http::fake([
-        'api.test.com/api/token/connect' => Http::response(['message' => 'Unauthorized'], 401),
+        'api.test.com/api/v1/token/connect' => Http::response(['message' => 'Unauthorized'], 401),
     ]);
 
     expect(fn () => $this->apiClient->connect())
@@ -56,7 +57,7 @@ test('connect throws exception on failure', function () {
 
 test('connect forgets cache entry when api call fails', function () {
     Http::fake([
-        'api.test.com/api/token/connect' => Http::response(['message' => 'Unauthorized'], 401),
+        'api.test.com/api/v1/token/connect' => Http::response(['message' => 'Unauthorized'], 401),
     ]);
 
     expect(fn () => $this->apiClient->connect())
@@ -67,8 +68,8 @@ test('connect forgets cache entry when api call fails', function () {
 
 test('login stores user and token in session', function () {
     Http::fake([
-        'api.test.com/api/token/connect' => Http::response(['token' => 'conn-token'], 200),
-        'api.test.com/api/login' => Http::response([
+        'api.test.com/api/v1/token/connect' => Http::response(['token' => 'conn-token'], 200),
+        'api.test.com/api/v1/login' => Http::response([
             'user' => ['id' => '01H', 'name' => 'Test', 'email' => 'test@test.com'],
             'token' => 'sanctum-token',
         ], 200),
@@ -81,15 +82,15 @@ test('login stores user and token in session', function () {
     expect(Session::get('api_token'))->toBe('sanctum-token');
 
     Http::assertSent(function ($request) {
-        return $request->url() === 'https://api.test.com/api/login'
+        return $request->url() === 'https://api.test.com/api/v1/login'
             && $request->hasHeader('X-Connection-Token');
     });
 });
 
 test('login throws exception on invalid credentials', function () {
     Http::fake([
-        'api.test.com/api/token/connect' => Http::response(['token' => 'conn-token'], 200),
-        'api.test.com/api/login' => Http::response(['message' => 'Invalid credentials.'], 401),
+        'api.test.com/api/v1/token/connect' => Http::response(['token' => 'conn-token'], 200),
+        'api.test.com/api/v1/login' => Http::response(['message' => 'Invalid credentials.'], 401),
     ]);
 
     expect(fn () => $this->apiClient->login('test@test.com', 'wrong'))
@@ -98,8 +99,8 @@ test('login throws exception on invalid credentials', function () {
 
 test('register stores user and token in session', function () {
     Http::fake([
-        'api.test.com/api/token/connect' => Http::response(['token' => 'conn-token'], 200),
-        'api.test.com/api/register' => Http::response([
+        'api.test.com/api/v1/token/connect' => Http::response(['token' => 'conn-token'], 200),
+        'api.test.com/api/v1/register' => Http::response([
             'user' => ['id' => '01H', 'name' => 'New', 'email' => 'new@test.com'],
             'token' => 'sanctum-token',
         ], 200),
@@ -114,8 +115,8 @@ test('register stores user and token in session', function () {
 
 test('register throws exception on failure', function () {
     Http::fake([
-        'api.test.com/api/token/connect' => Http::response(['token' => 'conn-token'], 200),
-        'api.test.com/api/register' => Http::response(['message' => 'Email already taken.'], 422),
+        'api.test.com/api/v1/token/connect' => Http::response(['token' => 'conn-token'], 200),
+        'api.test.com/api/v1/register' => Http::response(['message' => 'Email already taken.'], 422),
     ]);
 
     expect(fn () => $this->apiClient->register('New', 'taken@test.com', 'pw', 'pw'))
@@ -127,8 +128,8 @@ test('logout calls api and clears session', function () {
     Session::put('api_token', 'sanctum-token');
 
     Http::fake([
-        'api.test.com/api/token/connect' => Http::response(['token' => 'conn-token'], 200),
-        'api.test.com/api/logout' => Http::response([], 204),
+        'api.test.com/api/v1/token/connect' => Http::response(['token' => 'conn-token'], 200),
+        'api.test.com/api/v1/logout' => Http::response([], 204),
     ]);
 
     $this->apiClient->logout();
@@ -142,8 +143,8 @@ test('logout clears session even when api call fails', function () {
     Session::put('api_token', 'sanctum-token');
 
     Http::fake([
-        'api.test.com/api/token/connect' => Http::response(['token' => 'conn-token'], 200),
-        'api.test.com/api/logout' => Http::response([], 500),
+        'api.test.com/api/v1/token/connect' => Http::response(['token' => 'conn-token'], 200),
+        'api.test.com/api/v1/logout' => Http::response([], 500),
     ]);
 
     $this->apiClient->logout();
